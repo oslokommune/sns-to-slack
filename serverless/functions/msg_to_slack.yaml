@@ -1,0 +1,12 @@
+handler: slack.msg_to_slack.handler
+environment:
+  STAGE: ${self:provider.stage}
+events:
+- http:
+    path: {slack}
+    method: post
+    cors: { origin: '*' }
+    request:
+      parameters:
+        paths:
+          uuid: true
