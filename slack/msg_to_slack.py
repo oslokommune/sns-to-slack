@@ -4,7 +4,7 @@ import requests
 def lambda_handler(event, context):
     print(event)
 
-    slack_data =  f"{event['message']} - Dato: {event['dato']}"
+    slack_data =  f":warning: \n *Status:* {event['status']}\n *Name:* {event['lambdaname']}\n *Message:*\n {event['message']}\n *Dato:* {event['dato']}"
 
     webhook_url = '***REMOVED***'
    
