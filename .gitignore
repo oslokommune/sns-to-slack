@@ -19,7 +19,7 @@ var/
 *.egg
 .tox/
 __pycache__
-
+.vscode
 # Serverless directories
 .serverless
 node_modules/

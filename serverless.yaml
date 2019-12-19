@@ -11,7 +11,7 @@ provider:
     serverSideEncryption: AES256
   deploymentPrefix: deploy
   iamManagedPolicies:
-    - 'arn:aws:iam::#{AWS::AccountId}:policy/lambda-boilerplate-policy'
+    - 'arn:aws:iam::#{AWS::AccountId}:policy/Msg_to_slack_policy'
     - 'arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
   tags:
     GIT_REV: ${git:branch}:${git:sha1}
@@ -24,12 +24,12 @@ package:
   exclude:
     - '**/*'
   include:
-    - boilerplate/*.py
+    - slack/*.py
 
 
 functions:
-  get_boilerplate: ${file(serverless/functions/get_boilerplate.yaml)}
-
+  msg_to_slack: ${file(serverless/functions/msg_to_slack.yaml)}
+  lambda_to_slack: ${file(serverless/functions/lambda_to_slack.yaml)}
 plugins:
   - serverless-python-requirements
   - serverless-plugin-git-variables
