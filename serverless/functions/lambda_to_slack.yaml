@@ -1,9 +1,9 @@
-handler: slack.msg_to_slack.lambda_handler
+handler: slack.lambda_to_slack.lambda_handler
 environment:
   STAGE: ${self:provider.stage}
 events:
  - http:
-    path: "slack"
+    path: "post-to-slack"
     method: get
     cors: { origin: '*' }
     request:
