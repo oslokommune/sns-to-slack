@@ -8,3 +8,7 @@ The message in Json-format:
 * status: FAILED? ERROR? WARNING?
 * message:
 * dato:
+
+## Example
+* **msg_to_slack** is the lambda-function that send the message to slack
+* **lambda_to_slack** is an example of how to invoke the msg_to_slack
