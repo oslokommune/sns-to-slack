@@ -1,3 +1,4 @@
 handler: slack.cloudwatch_error_to_slack.lambda_handler
 environment:
   STAGE: ${self:provider.stage}
+  SLACK_WEBHOOK_URL: ${ssm:/dataplatform/slack/cloudwatch-lambda-error/url}

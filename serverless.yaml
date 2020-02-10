@@ -20,7 +20,6 @@ provider:
     GIT_REV: ${git:branch}:${git:sha1}
     STAGE: ${self:provider.stage}
     VERSION: ${self:custom.version}
-    SLACK_WEBHOOK_URL: ${ssm:/dataplatform/slack/cloudwatch-lambda-error/url}
 
 package:
   exclude:
