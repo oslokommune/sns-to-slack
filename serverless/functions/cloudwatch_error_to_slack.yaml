@@ -1,0 +1,3 @@
+handler: slack.cloudwatch_error_to_slack.lambda_handler
+environment:
+  STAGE: ${self:provider.stage}

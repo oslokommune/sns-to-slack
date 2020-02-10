@@ -1,5 +1,5 @@
 frameworkVersion: ">=1.50.0 <2.0.0"
-service: lambda-boilerplate
+service: msg-to-slack
 provider:
   name: aws
   runtime: python3.7
@@ -20,6 +20,8 @@ provider:
     GIT_REV: ${git:branch}:${git:sha1}
     STAGE: ${self:provider.stage}
     VERSION: ${self:custom.version}
+    SLACK_WEBHOOK_URL: ${ssm:/dataplatform/slack/cloudwatch-lambda-error/url}
+
 package:
   exclude:
     - '**/*'
@@ -30,6 +32,8 @@ package:
 functions:
   msg_to_slack: ${file(serverless/functions/msg_to_slack.yaml)}
   lambda_to_slack: ${file(serverless/functions/lambda_to_slack.yaml)}
+  cloudwatch_error_to_slack: ${file(serverless/functions/cloudwatch_error_to_slack.yaml)}
+
 plugins:
   - serverless-python-requirements
   - serverless-plugin-git-variables
