@@ -27,3 +27,4 @@ def lambda_handler(event, context):
                 "Request to slack returned an error %s, the response is:\n%s"
                 % (response.status_code, response.text)
             )
+    return True

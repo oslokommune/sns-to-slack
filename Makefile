@@ -30,7 +30,7 @@ format: $(BUILD_VENV)/bin/black
 
 .PHONY: test
 test: $(BUILD_VENV)/bin/tox
-	$(BUILD_PY) -m tox -p auto
+	$(BUILD_PY) -m tox -p auto -o
 
 .PHONY: upgrade-deps
 upgrade-deps: $(BUILD_VENV)/bin/pip-compile
@@ -94,6 +94,10 @@ $(BUILD_VENV)/bin/pip-compile: $(BUILD_VENV)
 
 $(BUILD_VENV)/bin/pip-sync: $(BUILD_VENV)
 	$(BUILD_PY) -m pip install -U pip-tools
+
+$(BUILD_VENV)/bin/tox: $(BUILD_VENV)
+	$(BUILD_PY) -m pip install -I virtualenv==16.7.9
+	$(BUILD_PY) -m pip install -U tox
 
 $(BUILD_VENV)/bin/%: $(BUILD_VENV)
 	$(BUILD_PY) -m pip install -U $*
