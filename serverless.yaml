@@ -12,7 +12,6 @@ provider:
   deploymentPrefix: deploy
   rolePermissionsBoundary: "arn:aws:iam::#{AWS::AccountId}:policy/oslokommune/oslokommune-boundary"
   iamManagedPolicies:
-    - 'arn:aws:iam::#{AWS::AccountId}:policy/Msg_to_slack_policy'
     - 'arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
   tags:
     GIT_REV: ${git:branch}:${git:sha1}
@@ -30,8 +29,6 @@ package:
 
 
 functions:
-  msg_to_slack: ${file(serverless/functions/msg_to_slack.yaml)}
-  lambda_to_slack: ${file(serverless/functions/lambda_to_slack.yaml)}
   cloudwatch_error_to_slack: ${file(serverless/functions/cloudwatch_error_to_slack.yaml)}
 
 plugins:
