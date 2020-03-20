@@ -12,7 +12,7 @@ setup(
     version="0.1.0",
     author="Origo Dataplattform",
     author_email="dataplattform@oslo.kommune.no",
-    description="Sends messages to slack group feilmeldinger-dataplattform ",
+    description="Sends messages and alerts to Slack",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.oslo.kommune.no/origo-dataplatform/msg-to-slack",
