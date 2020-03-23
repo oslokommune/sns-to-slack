@@ -1,6 +1,6 @@
 import re
 import json
-from slack.cloudwatch_error_to_slack import lambda_handler
+from slack.cloudwatch_error_to_slack import handler
 
 
 def test_cloudwatch_error_to_slack(requests_mock):
@@ -13,7 +13,7 @@ def test_cloudwatch_error_to_slack(requests_mock):
     event = {"Records": [{"Sns": {"Message": json.dumps(message)}}]}
     matcher = re.compile("slack")
     requests_mock.register_uri("POST", matcher, json={"access": False})
-    res = lambda_handler(event, None)
+    res = handler(event, None)
     assert res is True
 
 
@@ -28,6 +28,6 @@ def test_cloudwatch_error_to_slack_failing(requests_mock):
     matcher = re.compile("slack")
     requests_mock.register_uri("POST", matcher, json={"access": False}, status_code=201)
     try:
-        lambda_handler(event, None)
+        handler(event, None)
     except ValueError:
         assert True
