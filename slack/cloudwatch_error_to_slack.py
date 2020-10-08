@@ -9,7 +9,34 @@ def handler(event, context):
     for record in event["Records"]:
         sns = record["Sns"]
         message = json.loads(sns["Message"])
-        slack_data = f"*Alarm:* {message['AlarmName']}\n *Reason:* {message['NewStateReason']}\n *At:* {message['StateChangeTime']}\n *Account:* {message['AWSAccountId']}\n"
+
+        try:
+            # Assumed format: "arn:aws:cloudwatch:eu-west-1:***REMOVED***:alarm:ALARM_NAME"
+            region = message["AlarmArn"].split(":")[3]
+        except IndexError:
+            region = "eu-west-1"
+
+        prefix = "Dataplatform_LambdaError_"
+        function_name = (
+            message["AlarmName"].split(prefix, 1)
+            if prefix in message["AlarmName"]
+            else message["AlarmName"]
+        )
+
+        trigger = message["Trigger"]
+        if trigger["Namespace"] == "AWS/Lambda":
+            for dim in trigger["Dimensions"]:
+                if dim["name"] == "FunctionName":
+                    function_name = dim["value"]
+                    break
+
+        monitor_url = f"https://{region}.console.aws.amazon.com/lambda/home?region={region}#/functions/{function_name}?tab=monitoring"
+
+        slack_data = (
+            f"Lambda function *{function_name}* failed.\n"
+            f"Reason: {message['NewStateReason']}\n"
+            f"<{monitor_url}|Monitoring>\n"
+        )
 
         response = requests.post(
             WEBHOOK_URL,
