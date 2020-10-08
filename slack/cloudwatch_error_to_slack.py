@@ -15,8 +15,6 @@ def handler(event, context):
             WEBHOOK_URL,
             json={
                 "text": slack_data,
-                "username": "LambdaError",
-                "icon_emoji": ":ghost:",
             },
             headers={"Content-Type": "application/json"},
         )
