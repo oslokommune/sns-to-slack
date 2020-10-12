@@ -4,9 +4,15 @@ import requests
 
 WEBHOOK_URL = os.environ["SLACK_ALERTS_WEBHOOK_URL"]
 
-
 def handler(event, context):
     for record in event["Records"]:
+        source = record['EventSource']
+        if source != "aws:sns":
+            raise ValueError(
+                "Unsuported 'EventSource' %s. Supported types: 'aws:sns'"
+                % (source)
+            )
+
         sns = record["Sns"]
         message = json.loads(sns["Message"])
 
