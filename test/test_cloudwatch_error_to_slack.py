@@ -1,6 +1,10 @@
 import re
 import json
-from slack.cloudwatch_error_to_slack import handler
+from slack.cloudwatch_error_to_slack import (
+    handler,
+    slackTextFromRecord,
+    slackTextFromSnsMessage,
+)
 
 
 message_mock = {
@@ -27,20 +31,58 @@ message_mock = {
     },
 }
 
+record_mock = {"EventSource": "aws:sns", "Sns": {"Message": json.dumps(message_mock)}}
+
+event_mock = {"Records": [record_mock]}
+
 
 def test_cloudwatch_error_to_slack(requests_mock):
-    event = {"Records": [{"Sns": {"Message": json.dumps(message_mock)}}]}
     matcher = re.compile("slack")
     requests_mock.register_uri("POST", matcher, json={"access": False})
-    res = handler(event, None)
+    res = handler(event_mock, None)
     assert res is True
 
 
 def test_cloudwatch_error_to_slack_failing(requests_mock):
-    event = {"Records": [{"Sns": {"Message": json.dumps(message_mock)}}]}
     matcher = re.compile("slack")
     requests_mock.register_uri("POST", matcher, json={"access": False}, status_code=201)
     try:
-        handler(event, None)
+        handler(event_mock, None)
+    except ValueError:
+        assert True
+
+
+def test_slack_text_from_record_unsupported_event_source():
+    mock = record_mock
+    mock["EventSource"] = "aws:asdf"
+    try:
+        slackTextFromRecord(mock)
+    except ValueError:
+        assert True
+
+
+def test_slack_text_from_sns_nessage():
+    text = slackTextFromSnsMessage(message_mock)
+
+    assert "s3-writer-dev-is-latest-edition" in text
+    assert "My new state reason" in text
+    assert "eu-west-1" in text
+    assert "Monitoring" in text
+
+
+def test_slack_text_from_sns_nessage_unsupported_namespace():
+    mock = message_mock
+    mock["Trigger"]["Namespace"] = "AWS/Kappa"
+    try:
+        slackTextFromSnsMessage(mock)
+    except ValueError:
+        assert True
+
+
+def test_slack_text_from_sns_nessage_function_name_not_found():
+    mock = message_mock
+    mock["Trigger"]["Dimensions"] = [{"name": "TheFourth", "value": "lorem-ipsum"}]
+    try:
+        slackTextFromSnsMessage(mock)
     except ValueError:
         assert True
