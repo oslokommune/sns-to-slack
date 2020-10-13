@@ -28,12 +28,11 @@ def slackTextFromSnsMessage(message):
     if function_name is None:
         raise ValueError("Lambda function name not found.")
 
-    reason = message["NewStateReason"]
+    config_url = f"https://{region}.console.aws.amazon.com/lambda/home?region={region}#/functions/{function_name}?tab=configuration"
     monitor_url = f"https://{region}.console.aws.amazon.com/lambda/home?region={region}#/functions/{function_name}?tab=monitoring"
 
     return (
-        f"Lambda function *{function_name}* failed.\n"
-        f"Reason: {reason}\n"
+        f"Lambda function *<{config_url}|{function_name}>* failed.\n"
         f"<{monitor_url}|Monitoring>\n"
     )
 

@@ -62,7 +62,6 @@ def test_slack_text_from_sns_nessage():
     text = slackTextFromSnsMessage(message_mock)
 
     assert "s3-writer-dev-is-latest-edition" in text
-    assert "My new state reason" in text
     assert "eu-west-1" in text
     assert "Monitoring" in text
 
