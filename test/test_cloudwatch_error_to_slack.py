@@ -1,5 +1,6 @@
 import re
 import json
+import pytest
 from slack.cloudwatch_error_to_slack import (
     handler,
     slackTextFromRecord,
@@ -46,19 +47,15 @@ def test_cloudwatch_error_to_slack(requests_mock):
 def test_cloudwatch_error_to_slack_failing(requests_mock):
     matcher = re.compile("slack")
     requests_mock.register_uri("POST", matcher, json={"access": False}, status_code=201)
-    try:
+    with pytest.raises(ValueError):
         handler(event_mock, None)
-    except ValueError:
-        assert True
 
 
 def test_slack_text_from_record_unsupported_event_source():
     mock = record_mock
     mock["EventSource"] = "aws:asdf"
-    try:
+    with pytest.raises(ValueError):
         slackTextFromRecord(mock)
-    except ValueError:
-        assert True
 
 
 def test_slack_text_from_sns_nessage():
@@ -73,16 +70,12 @@ def test_slack_text_from_sns_nessage():
 def test_slack_text_from_sns_nessage_unsupported_namespace():
     mock = message_mock
     mock["Trigger"]["Namespace"] = "AWS/Kappa"
-    try:
+    with pytest.raises(ValueError):
         slackTextFromSnsMessage(mock)
-    except ValueError:
-        assert True
 
 
 def test_slack_text_from_sns_nessage_function_name_not_found():
     mock = message_mock
     mock["Trigger"]["Dimensions"] = [{"name": "TheFourth", "value": "lorem-ipsum"}]
-    try:
+    with pytest.raises(ValueError):
         slackTextFromSnsMessage(mock)
-    except ValueError:
-        assert True
