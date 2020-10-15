@@ -30,6 +30,7 @@ package:
 
 functions:
   cloudwatch_error_to_slack: ${file(serverless/functions/cloudwatch_error_to_slack.yaml)}
+  cloudwatch_pipeline_state_to_slack: ${file(serverless/functions/cloudwatch_pipeline_state_to_slack.yaml)}
 
 plugins:
   - serverless-python-requirements
