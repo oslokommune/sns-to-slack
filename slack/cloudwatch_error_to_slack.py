@@ -1,7 +1,7 @@
 import json
 
 import requests
-from env import WEBHOOK_URL
+from slack.env import WEBHOOK_URL
 
 
 def slackTextFromSnsMessage(message):
