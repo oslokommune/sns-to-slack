@@ -1,4 +1,7 @@
+import json
+
 import requests
+
 from slack.env import WEBHOOK_URL
 
 
@@ -15,8 +18,8 @@ def get_slack_text(details):
     return f"Pipeline with id: {pipeline_id} failed.\n" f"Status is: {status}"
 
 
-def handler(event, context):
-    details = event.get("detail", None)
+def handle_message(message):
+    details = message.get("detail", None)
     if not details:
         return False
 
@@ -29,8 +32,23 @@ def handler(event, context):
 
         if response.status_code != 200:
             raise ValueError(
-                "Request to slack returned an error %s, the response is:\n%s"
-                % (response.status_code, response.text)
+                f"Request to slack returned an error {response.status_code}, the response is:\n{response.text}"
             )
 
     return True
+
+
+def handler(event, context):
+    records = event.get("Records", None)
+    if not records:
+        raise ValueError("Event does not contain Records")
+    record = records[0]
+    source = record["EventSource"]
+    if source == "aws:sns":
+        sns = record["Sns"]
+        event = json.loads(sns["Message"])
+        return handle_message(event)
+    else:
+        raise ValueError(
+            f"Unsuported 'EventSource' {source}. Supported types: 'aws:sns'"
+        )
