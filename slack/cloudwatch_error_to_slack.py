@@ -1,8 +1,7 @@
-import os
 import json
-import requests
 
-WEBHOOK_URL = os.environ["SLACK_ALERTS_WEBHOOK_URL"]
+import requests
+from slack.env import WEBHOOK_URL
 
 
 def slackTextFromSnsMessage(message):
