@@ -12,10 +12,28 @@ def check_if_status_is_failed(details):
     return status in failed_statuses
 
 
-def get_slack_text(details):
-    pipeline_id = details.get("name")
+def get_slack_text(details, region):
+    state_machine_arn = details.get("stateMachineArn")
+    execution_arn = details.get("executionArn")
+
+    state_machine_name = state_machine_arn.split(":")[-1]
+
+    prefix = "dataplatform-"
+
+    # When we get Lambda 3.9 support: replace with https://docs.python.org/3/library/stdtypes.html#str.removeprefix
+    if state_machine_name.startswith(prefix):
+        state_machine_name = state_machine_name[len(prefix) :]
+
+    base_url = f"https://{region}.console.aws.amazon.com/states/home?region={region}#"
+
+    state_machine_url = f"{base_url}/statemachines/view/{state_machine_arn}"
+    execution_url = f"{base_url}/executions/details/{execution_arn}"
+
     status = details.get("status")
-    return f"Pipeline with id: {pipeline_id} failed.\n" f"Status is: {status}"
+    return (
+        f"Pipeline *<{state_machine_url}|{state_machine_name}>* failed with status: {status}\n"
+        f"<{execution_url}|Execution details>"
+    )
 
 
 def handle_message(message):
@@ -24,9 +42,10 @@ def handle_message(message):
         return False
 
     if check_if_status_is_failed(details):
+        region = message.get("region")
         response = requests.post(
             WEBHOOK_URL,
-            json={"text": get_slack_text(details)},
+            json={"text": get_slack_text(details, region)},
             headers={"Content-Type": "application/json"},
         )
 

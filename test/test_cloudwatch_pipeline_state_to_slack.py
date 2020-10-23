@@ -9,7 +9,15 @@ from slack.cloudwatch_pipeline_state_to_slack import (
     check_if_status_is_failed,
 )
 
-message_mock = {"detail": {"name": "Failed Event", "status": "FAILED"}}
+message_mock = {
+    "region": "eu-west-1",
+    "detail": {
+        "name": "Failed Event",
+        "status": "FAILED",
+        "stateMachineArn": "blabla:blabla:state-machine-1",
+        "executionArn": "blabla:blabla:blabla:execution-1",
+    },
+}
 
 message_mock_wrong_status = {
     "detail": {"name": "Successful Event", "status": "SUCCESS"}
@@ -31,11 +39,7 @@ def test_check_if_status_is_failed():
 
 def test_get_slack_text():
     details = message_mock.get("detail")
-    assert (
-        get_slack_text(message_mock.get("detail"))
-        == f"Pipeline with id: {details['name']} failed.\n"
-        f"Status is: {details['status']}"
-    )
+    assert len(get_slack_text(details, "eu-west-1")) > 1
 
 
 def test_send_event_invalid_source(requests_mock):
