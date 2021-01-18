@@ -8,7 +8,7 @@ class BaseHandler:
 
     def __init__(self, msg):
         self.region = self._message_region(msg)
-        self.dimensions = msg["Trigger"]["Dimensions"]
+        self.dimensions = {d["name"]: d["value"] for d in msg["Trigger"]["Dimensions"]}
 
     def _message_region(self, message):
         try:
@@ -19,9 +19,6 @@ class BaseHandler:
 
     def aws_base_url(self, service):
         return f"https://{self.region}.console.aws.amazon.com/{service}/home?region={self.region}#"
-
-    def dimension_value(self, name):
-        return next((d for d in self.dimensions if d["name"] == name), {}).get("value")
 
     def slack_text(self):
         raise NotImplementedError
@@ -45,7 +42,7 @@ class LambdaHandler(BaseHandler):
     webhook_url = os.environ["SLACK_LAMBDA_ALERTS_WEBHOOK_URL"]
 
     def slack_text(self):
-        function_name = self.dimension_value("FunctionName")
+        function_name = self.dimensions.get("FunctionName")
 
         if not function_name:
             raise ValueError("Lambda function name not found")
@@ -64,7 +61,7 @@ class PipelineHandler(BaseHandler):
     webhook_url = os.environ["SLACK_PIPELINE_ALERTS_WEBHOOK_URL"]
 
     def slack_text(self):
-        state_machine_arn = self.dimension_value("StateMachineArn")
+        state_machine_arn = self.dimensions.get("StateMachineArn")
 
         if not state_machine_arn:
             raise ValueError("State machine ARN not found")
