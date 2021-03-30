@@ -31,7 +31,7 @@ def lambda_message():
 
 
 @pytest.fixture
-def pipeline_message():
+def state_machine_message():
     return {
         "AlarmName": "Dataplatform-PipelineError-dataplatform-pipeline-excel-to-csv",
         "AlarmDescription": None,
@@ -91,31 +91,22 @@ def unknown_namespace_message():
     }
 
 
+def _event(message):
+    return {
+        "Records": [{"EventSource": "aws:sns", "Sns": {"Message": json.dumps(message)}}]
+    }
+
+
 @pytest.fixture
 def lambda_event(lambda_message):
-    return {
-        "Records": [
-            {"EventSource": "aws:sns", "Sns": {"Message": json.dumps(lambda_message)}}
-        ]
-    }
+    return _event(lambda_message)
 
 
 @pytest.fixture
-def pipeline_event(pipeline_message):
-    return {
-        "Records": [
-            {"EventSource": "aws:sns", "Sns": {"Message": json.dumps(pipeline_message)}}
-        ]
-    }
+def state_machine_event(state_machine_message):
+    return _event(state_machine_message)
 
 
 @pytest.fixture
 def unknown_namespace_event(unknown_namespace_message):
-    return {
-        "Records": [
-            {
-                "EventSource": "aws:sns",
-                "Sns": {"Message": json.dumps(unknown_namespace_message)},
-            }
-        ]
-    }
+    return _event(unknown_namespace_message)
