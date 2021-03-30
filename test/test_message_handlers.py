@@ -1,6 +1,6 @@
 import pytest
 
-from slack.message_handlers import LambdaHandler, PipelineHandler
+from slack.message_handlers import LambdaHandler, StateMachineHandler
 
 
 def test_lambda_handler_slack_text(lambda_message):
@@ -21,19 +21,21 @@ def test_lambda_handler_slack_text_function_name_not_found(lambda_message):
         handler.slack_text()
 
 
-def test_pipeline_handler_slack_text(pipeline_message):
-    handler = PipelineHandler(pipeline_message)
+def test_state_machine_handler_slack_text(state_machine_message):
+    handler = StateMachineHandler(state_machine_message)
     text = handler.slack_text()
 
-    assert "Pipeline" in text
+    assert "State machine" in text
     assert "dataplatform-pipeline-excel-to-csv" in text
     assert "failed" in text
 
 
-def test_pipeline_handler_slack_text_pipeline_arn_not_found(pipeline_message):
-    pipeline_message["Trigger"]["Dimensions"] = [
+def test_state_machine_handler_slack_text_state_machine_arn_not_found(
+    state_machine_message,
+):
+    state_machine_message["Trigger"]["Dimensions"] = [
         {"name": "TheFourth", "value": "lorem-ipsum"}
     ]
-    handler = PipelineHandler(pipeline_message)
+    handler = StateMachineHandler(state_machine_message)
     with pytest.raises(ValueError):
         handler.slack_text()

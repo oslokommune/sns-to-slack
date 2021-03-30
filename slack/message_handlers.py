@@ -57,8 +57,8 @@ class LambdaHandler(BaseHandler):
         )
 
 
-class PipelineHandler(BaseHandler):
-    webhook_url = os.environ["SLACK_PIPELINE_ALERTS_WEBHOOK_URL"]
+class StateMachineHandler(BaseHandler):
+    webhook_url = os.environ["SLACK_STATE_MACHINE_ALERTS_WEBHOOK_URL"]
 
     def slack_text(self):
         state_machine_arn = self.dimensions.get("StateMachineArn")
@@ -71,4 +71,4 @@ class PipelineHandler(BaseHandler):
 
         name = state_machine_arn.split(":")[-1]
 
-        return f"Pipeline *<{url}|{name}>* failed."
+        return f"State machine *<{url}|{name}>* failed."
