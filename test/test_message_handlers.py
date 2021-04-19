@@ -25,7 +25,7 @@ def test_state_machine_handler_slack_text(state_machine_message):
     handler = StateMachineHandler(state_machine_message)
     text = handler.slack_text()
 
-    assert "State machine" in text
+    assert "Pipeline" in text
     assert "dataplatform-pipeline-excel-to-csv" in text
     assert "failed" in text
 

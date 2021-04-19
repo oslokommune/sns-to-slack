@@ -40,6 +40,7 @@ class BaseHandler:
 
 class LambdaHandler(BaseHandler):
     webhook_url = os.environ["SLACK_LAMBDA_ALERTS_WEBHOOK_URL"]
+    msg_format = os.environ["SLACK_LAMBDA_ALERTS_MSG_FORMAT"]
 
     def slack_text(self):
         function_name = self.dimensions.get("FunctionName")
@@ -48,17 +49,17 @@ class LambdaHandler(BaseHandler):
             raise ValueError("Lambda function name not found")
 
         base_url = self.aws_base_url("lambda")
-        config_url = f"{base_url}/functions/{function_name}?tab=configuration"
-        monitor_url = f"{base_url}/functions/{function_name}?tab=monitoring"
 
-        return (
-            f"Lambda function *<{config_url}|{function_name}>* failed.\n"
-            f"<{monitor_url}|Monitoring>\n"
+        return self.msg_format.format(
+            config_url=f"{base_url}/functions/{function_name}?tab=configuration",
+            function_name=function_name,
+            monitor_url=f"{base_url}/functions/{function_name}?tab=monitoring",
         )
 
 
 class StateMachineHandler(BaseHandler):
     webhook_url = os.environ["SLACK_STATE_MACHINE_ALERTS_WEBHOOK_URL"]
+    msg_format = os.environ["SLACK_STATE_MACHINE_ALERTS_MSG_FORMAT"]
 
     def slack_text(self):
         state_machine_arn = self.dimensions.get("StateMachineArn")
@@ -67,8 +68,8 @@ class StateMachineHandler(BaseHandler):
             raise ValueError("State machine ARN not found")
 
         base_url = self.aws_base_url("states")
-        url = f"{base_url}/statemachines/view/{state_machine_arn}"
 
-        name = state_machine_arn.split(":")[-1]
-
-        return f"State machine *<{url}|{name}>* failed."
+        return self.msg_format.format(
+            url=f"{base_url}/statemachines/view/{state_machine_arn}",
+            name=state_machine_arn.split(":")[-1],
+        )
