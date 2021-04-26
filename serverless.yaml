@@ -1,5 +1,5 @@
 frameworkVersion: ">=2.10.0 <3.0.0"
-service: msg-to-slack
+service: sns-to-slack
 provider:
   name: aws
   runtime: python3.7
