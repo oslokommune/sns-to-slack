@@ -1,5 +1,7 @@
 import os
+from datetime import datetime, timedelta, timezone
 
+import prison
 import requests
 
 
@@ -42,18 +44,42 @@ class LambdaHandler(BaseHandler):
     webhook_url = os.environ["SLACK_LAMBDA_ALERTS_WEBHOOK_URL"]
     msg_format = os.environ["SLACK_LAMBDA_ALERTS_MSG_FORMAT"]
 
+    def kibana_url(self, function_name):
+        now = datetime.now(timezone.utc)
+
+        filters = [
+            {"query": {"match_phrase": match_phrase}}
+            for match_phrase in [
+                {"function_name": function_name},
+                {"level": "error"},
+            ]
+        ]
+        time = {
+            key: time.isoformat().replace("+00:00", "Z")
+            for key, time in [
+                ("from", now - timedelta(minutes=15)),
+                ("to", now + timedelta(minutes=5)),
+            ]
+        }
+        return "{}/discover#/?_a={}&_g={}".format(
+            os.environ.get("KIBANA_BASE_URL"),
+            prison.dumps({"filters": filters}),
+            prison.dumps({"time": time}),
+        )
+
     def slack_text(self):
         function_name = self.dimensions.get("FunctionName")
 
         if not function_name:
             raise ValueError("Lambda function name not found")
 
-        base_url = self.aws_base_url("lambda")
+        aws_base_url = self.aws_base_url("lambda")
 
         return self.msg_format.format(
-            config_url=f"{base_url}/functions/{function_name}?tab=configuration",
+            config_url=f"{aws_base_url}/functions/{function_name}?tab=configuration",
             function_name=function_name,
-            monitor_url=f"{base_url}/functions/{function_name}?tab=monitoring",
+            monitor_url=f"{aws_base_url}/functions/{function_name}?tab=monitoring",
+            kibana_url=self.kibana_url(function_name),
         )
 
 
