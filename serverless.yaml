@@ -61,6 +61,9 @@ custom:
     dockerizePip: non-linux
     slim: true
     usePoetry: false
+  prune:
+    automatic: true
+    number: 3
   exportGitVariables: false
   deploymentBucket:
     prod: ok-origo-dataplatform-config-prod
