@@ -1,4 +1,5 @@
 name: Deploy Dev
+
 on:
   push:
     branches:
@@ -8,6 +9,7 @@ on:
 jobs:
   deploy-dev:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.9
