@@ -46,6 +46,7 @@ functions:
       - sns: arn:aws:sns:eu-west-1:${aws:accountId}:dataplatform_pipeline_error
 
 plugins:
+  - serverless-better-credentials # must be first
   - serverless-plugin-git-variables
   - serverless-prune-plugin
   - serverless-python-requirements
