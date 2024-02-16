@@ -13,5 +13,9 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/oslokommune/sns-to-slack",
     packages=find_packages(),
-    install_requires=["prison", "requests"],
+    install_requires=[
+        "okdata-aws>=2.1,<3",
+        "prison",
+        "requests",
+    ],
 )

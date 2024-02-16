@@ -17,6 +17,7 @@ provider:
     role:
       permissionsBoundary: "arn:aws:iam::${aws:accountId}:policy/oslokommune/oslokommune-boundary"
       managedPolicies:
+        - "arn:aws:iam::${aws:accountId}:policy/sns-to-slack"
         - 'arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
   tags:
     GIT_REV: ${git:branch}:${git:sha1}
@@ -36,9 +37,9 @@ functions:
     handler: slack.handler.cloudwatch_error_to_slack
     environment:
       STAGE: ${self:provider.stage}
-      SLACK_LAMBDA_ALERTS_WEBHOOK_URL: ${ssm:/dataplatform/sns-to-slack/slack-lambda-alerts-webhook-url}
+      SLACK_LAMBDA_ALERTS_WEBHOOK_URL_SSM_PATH: "/dataplatform/sns-to-slack/slack-lambda-alerts-webhook-url"
       SLACK_LAMBDA_ALERTS_MSG_FORMAT: "Lambda function *<{config_url}|{function_name}>* failed.\n<{monitor_url}|Monitoring> | <{kibana_url}|Kibana>\n"
-      SLACK_STATE_MACHINE_ALERTS_WEBHOOK_URL: ${ssm:/dataplatform/sns-to-slack/slack-pipeline-alerts-webhook-url}
+      SLACK_STATE_MACHINE_ALERTS_WEBHOOK_URL_SSM_PATH: "/dataplatform/sns-to-slack/slack-pipeline-alerts-webhook-url"
       SLACK_STATE_MACHINE_ALERTS_MSG_FORMAT: "Pipeline *<{url}|{name}>* failed."
       KIBANA_BASE_URL: "http://localhost:8080/_plugin/kibana/app"
     events:
