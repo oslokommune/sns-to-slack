@@ -1,13 +1,13 @@
-import os
 from datetime import datetime, timedelta, timezone
 
 import prison
 import requests
+from okdata.aws.ssm import get_secret
+
+from slack.util import getenv
 
 
 class BaseHandler:
-    webhook_url: str = None
-
     def __init__(self, msg):
         self.region = self._message_region(msg)
         self.dimensions = {d["name"]: d["value"] for d in msg["Trigger"]["Dimensions"]}
@@ -22,12 +22,15 @@ class BaseHandler:
     def aws_base_url(self, service):
         return f"https://{self.region}.console.aws.amazon.com/{service}/home?region={self.region}#"
 
+    def webhook_url(self):
+        raise NotImplementedError
+
     def slack_text(self):
         raise NotImplementedError
 
     def post_to_slack(self):
         response = requests.post(
-            self.webhook_url,
+            self.webhook_url(),
             json={"text": self.slack_text()},
             headers={"Content-Type": "application/json"},
         )
@@ -41,8 +44,7 @@ class BaseHandler:
 
 
 class LambdaHandler(BaseHandler):
-    webhook_url = os.environ["SLACK_LAMBDA_ALERTS_WEBHOOK_URL"]
-    msg_format = os.environ["SLACK_LAMBDA_ALERTS_MSG_FORMAT"]
+    msg_format = getenv("SLACK_LAMBDA_ALERTS_MSG_FORMAT")
 
     def kibana_url(self, function_name):
         now = datetime.now(timezone.utc)
@@ -62,10 +64,13 @@ class LambdaHandler(BaseHandler):
             ]
         }
         return "{}/discover#/?_a={}&_g={}".format(
-            os.environ.get("KIBANA_BASE_URL"),
+            getenv("KIBANA_BASE_URL"),
             prison.dumps({"filters": filters}),
             prison.dumps({"time": time}),
         )
+
+    def webhook_url(self):
+        return get_secret(getenv("SLACK_LAMBDA_ALERTS_WEBHOOK_URL_SSM_PATH"))
 
     def slack_text(self):
         function_name = self.dimensions.get("FunctionName")
@@ -84,8 +89,10 @@ class LambdaHandler(BaseHandler):
 
 
 class StateMachineHandler(BaseHandler):
-    webhook_url = os.environ["SLACK_STATE_MACHINE_ALERTS_WEBHOOK_URL"]
-    msg_format = os.environ["SLACK_STATE_MACHINE_ALERTS_MSG_FORMAT"]
+    msg_format = getenv("SLACK_STATE_MACHINE_ALERTS_MSG_FORMAT")
+
+    def webhook_url(self):
+        return get_secret(getenv("SLACK_STATE_MACHINE_ALERTS_WEBHOOK_URL_SSM_PATH"))
 
     def slack_text(self):
         state_machine_arn = self.dimensions.get("StateMachineArn")
