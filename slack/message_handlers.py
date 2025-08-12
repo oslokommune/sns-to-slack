@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from urllib.parse import quote
 
 import prison
 import requests
@@ -10,6 +11,7 @@ from slack.util import getenv
 class BaseHandler:
     def __init__(self, msg):
         self.region = self._message_region(msg)
+        self.aws_account_id = msg["AWSAccountId"]
         self.dimensions = {d["name"]: d["value"] for d in msg["Trigger"]["Dimensions"]}
 
     def _message_region(self, message):
@@ -85,6 +87,30 @@ class LambdaHandler(BaseHandler):
             function_name=function_name,
             monitor_url=f"{aws_base_url}/functions/{function_name}?tab=monitoring",
             kibana_url=self.kibana_url(function_name),
+        )
+
+
+class SQSHandler(BaseHandler):
+    msg_format = getenv("SLACK_DLQ_ALERTS_MSG_FORMAT")
+
+    def webhook_url(self):
+        return get_secret(getenv("SLACK_DLQ_ALERTS_WEBHOOK_URL_SSM_PATH"))
+
+    def slack_text(self):
+        dlq_name = self.dimensions.get("QueueName")
+
+        if not dlq_name:
+            raise ValueError("Queue name not found")
+
+        base_url = self.aws_base_url("sqs/v3")
+        queue_id = quote(
+            f"https://sqs.{self.region}.amazonaws.com/{self.aws_account_id}/{dlq_name}",
+            safe=[],  # Slashes must also be quoted for the link to work
+        )
+
+        return self.msg_format.format(
+            dlq_name=dlq_name,
+            url=f"{base_url}/queues/{queue_id}",
         )
 
 
