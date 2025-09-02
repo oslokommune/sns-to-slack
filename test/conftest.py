@@ -31,6 +31,39 @@ def lambda_message():
 
 
 @pytest.fixture
+def sqs_message():
+    return {
+        "AlarmName": "Dataplatform_DeadLetterQueue",
+        "AlarmDescription": None,
+        "AWSAccountId": "123456",
+        "AlarmConfigurationUpdatedTimestamp": "2025-08-12T11:42:35.135+0000",
+        "NewStateValue": "ALARM",
+        "NewStateReason": "Threshold Crossed: 1 datapoint [1.0 (13/08/25 08:07:00)] was greater than or equal to the threshold (1.0).",
+        "StateChangeTime": "2025-08-13T08:08:23.374+0000",
+        "Region": "EU (Ireland)",
+        "AlarmArn": "arn:aws:cloudwatch:eu-west-1:123456789000:alarm:Dataplatform_DeadLetterQueue",
+        "OldStateValue": "INSUFFICIENT_DATA",
+        "OKActions": [],
+        "AlarmActions": ["arn:aws:sns:eu-west-1:123456789000:dataplatform_dlq_alerts"],
+        "InsufficientDataActions": [],
+        "Trigger": {
+            "MetricName": "ApproximateNumberOfMessagesVisible",
+            "Namespace": "AWS/SQS",
+            "StatisticType": "Statistic",
+            "Statistic": "SUM",
+            "Unit": None,
+            "Dimensions": [{"value": "DatasetEventsDLQ.fifo", "name": "QueueName"}],
+            "Period": 60,
+            "EvaluationPeriods": 1,
+            "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+            "Threshold": 1.0,
+            "TreatMissingData": "missing",
+            "EvaluateLowSampleCountPercentile": "",
+        },
+    }
+
+
+@pytest.fixture
 def state_machine_message():
     return {
         "AlarmName": "Dataplatform-PipelineError-dataplatform-pipeline-excel-to-csv",
@@ -100,6 +133,11 @@ def _event(message):
 @pytest.fixture
 def lambda_event(lambda_message):
     return _event(lambda_message)
+
+
+@pytest.fixture
+def sqs_event(sqs_message):
+    return _event(sqs_message)
 
 
 @pytest.fixture

@@ -3,7 +3,7 @@ import os
 import pytest
 from freezegun import freeze_time
 
-from slack.message_handlers import LambdaHandler, StateMachineHandler
+from slack.message_handlers import LambdaHandler, SQSHandler, StateMachineHandler
 
 
 @freeze_time("2020-01-01T12:00:00+00:00")
@@ -31,6 +31,21 @@ def test_lambda_handler_slack_text_function_name_not_found(lambda_message):
         {"name": "TheFourth", "value": "lorem-ipsum"}
     ]
     handler = LambdaHandler(lambda_message)
+    with pytest.raises(ValueError):
+        handler.slack_text()
+
+
+def test_sqs_handler_slack_text(sqs_message):
+    handler = SQSHandler(sqs_message)
+    assert (
+        handler.slack_text()
+        == "A message has arrived on the dead letter queue *<https://eu-west-1.console.aws.amazon.com/sqs/v3/home?region=eu-west-1#/queues/https%3A%2F%2Fsqs.eu-west-1.amazonaws.com%2F123456%2FDatasetEventsDLQ.fifo|DatasetEventsDLQ.fifo>*.\\n"
+    )
+
+
+def test_sqs_handler_slack_text_queue_name_not_found(sqs_message):
+    sqs_message["Trigger"]["Dimensions"] = []
+    handler = SQSHandler(sqs_message)
     with pytest.raises(ValueError):
         handler.slack_text()
 
