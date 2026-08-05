@@ -1,11 +1,10 @@
 import json
 
-from slack.message_handlers import LambdaHandler, SQSHandler, StateMachineHandler
+from slack.message_handlers import LambdaHandler, SQSHandler
 
 message_handlers = {
     "AWS/Lambda": LambdaHandler,
     "AWS/SQS": SQSHandler,
-    "AWS/States": StateMachineHandler,
 }
 
 

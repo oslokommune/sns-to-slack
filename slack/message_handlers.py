@@ -112,23 +112,3 @@ class SQSHandler(BaseHandler):
             dlq_name=dlq_name,
             url=f"{base_url}/queues/{queue_id}",
         )
-
-
-class StateMachineHandler(BaseHandler):
-    msg_format = getenv("SLACK_STATE_MACHINE_ALERTS_MSG_FORMAT")
-
-    def webhook_url(self):
-        return get_secret(getenv("SLACK_STATE_MACHINE_ALERTS_WEBHOOK_URL_SSM_PATH"))
-
-    def slack_text(self):
-        state_machine_arn = self.dimensions.get("StateMachineArn")
-
-        if not state_machine_arn:
-            raise ValueError("State machine ARN not found")
-
-        base_url = self.aws_base_url("states")
-
-        return self.msg_format.format(
-            url=f"{base_url}/statemachines/view/{state_machine_arn}",
-            name=state_machine_arn.split(":")[-1],
-        )
