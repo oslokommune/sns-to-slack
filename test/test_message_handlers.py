@@ -3,7 +3,7 @@ import os
 import pytest
 from freezegun import freeze_time
 
-from slack.message_handlers import LambdaHandler, SQSHandler, StateMachineHandler
+from slack.message_handlers import LambdaHandler, SQSHandler
 
 
 @freeze_time("2020-01-01T12:00:00+00:00")
@@ -46,25 +46,5 @@ def test_sqs_handler_slack_text(sqs_message):
 def test_sqs_handler_slack_text_queue_name_not_found(sqs_message):
     sqs_message["Trigger"]["Dimensions"] = []
     handler = SQSHandler(sqs_message)
-    with pytest.raises(ValueError):
-        handler.slack_text()
-
-
-def test_state_machine_handler_slack_text(state_machine_message):
-    handler = StateMachineHandler(state_machine_message)
-    text = handler.slack_text()
-
-    assert "Pipeline" in text
-    assert "dataplatform-pipeline-excel-to-csv" in text
-    assert "failed" in text
-
-
-def test_state_machine_handler_slack_text_state_machine_arn_not_found(
-    state_machine_message,
-):
-    state_machine_message["Trigger"]["Dimensions"] = [
-        {"name": "TheFourth", "value": "lorem-ipsum"}
-    ]
-    handler = StateMachineHandler(state_machine_message)
     with pytest.raises(ValueError):
         handler.slack_text()
