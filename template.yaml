@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Send SNS messages to Slack.
+
+Parameters:
+  Stage:
+    Type: String
+    AllowedValues: [dev, prod]
+    Default: dev
+  GitRev:
+    Type: String
+    Description: >-
+      Deployed Git revision, formatted as "branch:short-sha". The deploy status
+      script in dataplatform-config compares the 7-character SHA.
+    Default: unknown
+  Version:
+    Type: String
+    Default: 0.1.0
+
+Resources:
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub sns-to-slack-${Stage}-${AWS::Region}-lambdaRole
+      PermissionsBoundary: !Sub arn:aws:iam::${AWS::AccountId}:policy/oslokommune/oslokommune-boundary
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Sub arn:aws:iam::${AWS::AccountId}:policy/sns-to-slack
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+
+  CloudwatchErrorToSlackLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/sns-to-slack-${Stage}-cloudwatch_error_to_slack
+      RetentionInDays: 90
+
+  CloudwatchErrorToSlackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub sns-to-slack-${Stage}-cloudwatch_error_to_slack
+      CodeUri: .
+      Handler: slack.handler.cloudwatch_error_to_slack
+      Runtime: python3.13
+      MemorySize: 1024
+      Timeout: 6
+      Role: !GetAtt LambdaExecutionRole.Arn
+      LoggingConfig:
+        LogGroup: !Ref CloudwatchErrorToSlackLogGroup
+      Tags:
+        GIT_REV: !Ref GitRev
+        STAGE: !Ref Stage
+        VERSION: !Ref Version
+      Environment:
+        Variables:
+          GIT_REV: !Ref GitRev
+          STAGE: !Ref Stage
+          VERSION: !Ref Version
+          SLACK_LAMBDA_ALERTS_WEBHOOK_URL_SSM_PATH: /dataplatform/sns-to-slack/slack-lambda-alerts-webhook-url
+          SLACK_LAMBDA_ALERTS_MSG_FORMAT: "Lambda function *<{config_url}|{function_name}>* failed.\n<{monitor_url}|Monitoring> | <{kibana_url}|Kibana>\n"
+          SLACK_DLQ_ALERTS_WEBHOOK_URL_SSM_PATH: /dataplatform/sns-to-slack/dlq-alerts-webhook-url
+          SLACK_DLQ_ALERTS_MSG_FORMAT: "A message has arrived on the dead letter queue *<{url}|{dlq_name}>*.\n"
+          KIBANA_BASE_URL: http://localhost:8080/_plugin/kibana/app
+      Events:
+        DlqAlerts:
+          Type: SNS
+          Properties:
+            Topic: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:dataplatform_dlq_alerts
+        LambdaErrors:
+          Type: SNS
+          Properties:
+            Topic: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:dataplatform_lambda_error

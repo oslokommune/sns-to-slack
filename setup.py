@@ -6,7 +6,7 @@ with open("README.md", encoding="utf-8") as f:
 setup(
     name="sns-to-slack",
     version="0.1.0",
-    author="Origo Dataplattform",
+    author="Oslo kommune",
     author_email="dataplattform@oslo.kommune.no",
     description="Sends messages and alerts to Slack",
     long_description=long_description,

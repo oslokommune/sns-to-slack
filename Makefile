@@ -2,14 +2,15 @@
 .PROD_PROFILE := okdata-prod
 
 GLOBAL_PY := python3
-BUILD_VENV ?= .build_venv
+# Named `.venv` so that SAM ignores it by default.
+BUILD_VENV ?= .venv
 BUILD_PY := $(BUILD_VENV)/bin/python
 
-.PHONY: init
-init: node_modules $(BUILD_VENV)
+# Deployed Git revision, formatted as `<branch>:<short-sha>`.
+GIT_REV = $(shell git rev-parse --abbrev-ref HEAD):$(shell git rev-parse --short=7 HEAD)
 
-node_modules: package.json package-lock.json
-	npm install
+.PHONY: init
+init: $(BUILD_VENV)
 
 $(BUILD_VENV):
 	$(GLOBAL_PY) -m venv $(BUILD_VENV)
@@ -23,35 +24,41 @@ format: $(BUILD_VENV)/bin/black
 test: $(BUILD_VENV)/bin/tox
 	$(BUILD_PY) -m tox -p auto -o
 
+.PHONY: validate
+validate:
+	sam validate --lint --region eu-west-1
+
 .PHONY: upgrade-deps
 upgrade-deps: $(BUILD_VENV)/bin/pip-compile
 	$(BUILD_VENV)/bin/pip-compile -U
 
 .PHONY: deploy
-deploy: login-dev init format test
+deploy: login-dev init format test validate
 	@echo "\nDeploying to stage: dev\n"
-	sls deploy --stage dev --aws-profile $(.DEV_PROFILE)
+	sam build
+	sam deploy --config-env dev --profile $(.DEV_PROFILE) --parameter-overrides "Stage=dev GitRev=$(GIT_REV)"
 
 .PHONY: deploy-prod
-deploy-prod: login-prod init format is-git-clean test
-	sls deploy --stage prod --aws-profile $(.PROD_PROFILE)
+deploy-prod: login-prod init format is-git-clean test validate
+	sam build
+	sam deploy --config-env prod --profile $(.PROD_PROFILE) --parameter-overrides "Stage=prod GitRev=$(GIT_REV)"
 
 .PHONY: undeploy
-undeploy: login-dev init
+undeploy: login-dev
 	@echo "\nUndeploying stage: dev\n"
-	sls remove --stage dev --aws-profile $(.DEV_PROFILE)
+	sam delete --config-env dev --profile $(.DEV_PROFILE)
 
 .PHONY: undeploy-prod
-undeploy-prod: login-prod init
+undeploy-prod: login-prod
 	@echo "\nUndeploying stage: prod\n"
-	sls remove --stage prod --aws-profile $(.PROD_PROFILE)
+	sam delete --config-env prod --profile $(.PROD_PROFILE)
 
 .PHONY: login-dev
-login-dev: init
+login-dev:
 	aws sts get-caller-identity --profile $(.DEV_PROFILE) || aws sso login --profile=$(.DEV_PROFILE)
 
 .PHONY: login-prod
-login-prod: init
+login-prod:
 	aws sts get-caller-identity --profile $(.PROD_PROFILE) || aws sso login --profile=$(.PROD_PROFILE)
 
 .PHONY: is-git-clean
